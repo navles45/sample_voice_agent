@@ -33,6 +33,7 @@ async def voice():
     )
     
     response.append(start)
+    response.say("Welcome to the AI-powered voice agent. How can I assist you today?")
     return Response(content=str(response), media_type="application/xml")
 
 @app.post("/stream_callback")
@@ -42,8 +43,14 @@ def callback_streaming(data: Dict):
 
 @app.websocket("/audio-stream")
 async def audio_stream(websocket: WebSocket):
-    resp = VoiceResponse()
+    
     await websocket.accept()
+    stream_sid = None
+    audio_buffer = bytearray()
+    
+    greeting_text = "Hello! How can I help you?"
+    # greeting_audio_mulaw_b64 = await text_to_speech_and_encode(greeting_text)
+    # await websocket.send_json({ "event": "media", "streamSid": stream_sid, "media": { "payload": greeting_audio_mulaw_b64 }})
     print("Media stream started")
 
     try:
