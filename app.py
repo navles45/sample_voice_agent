@@ -11,10 +11,7 @@ import numpy as np
 import os
 
 app = FastAPI()
-ACCOUNT_SID = os.environ["TWILIO_ACCOUNT_SID"]
-AUTH_TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
 
-client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 @app.get("/")
 def read_root():
