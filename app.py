@@ -18,7 +18,7 @@ async def voice():
 
     # Start streaming audio to your WebSocket server
     start = Start()
-    start.stream(url="wss://0.0.0.0:8000/audio-stream")
+    start.stream(url="wss://sample-voice-agent.onrender.com/audio-stream")
     response.append(start)
 
     response.say("You are now connected to the assistant.")
