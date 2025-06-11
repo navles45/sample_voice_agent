@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Dict
 from fastapi.responses import Response
 from twilio.twiml.voice_response import VoiceResponse, Start, Stream
 from fastapi import FastAPI
@@ -18,12 +18,21 @@ async def voice():
 
     # Start streaming audio to your WebSocket server
     start = Start()
-    start.stream(url="wss://sample-voice-agent.onrender.com/audio-stream")
+    start.stream(
+        url="wss://sample-voice-agent.onrender.com/audio-stream",
+        status_callback="https://sample-voice-agent.onrender.com/stream_callback"
+    )
+    
     response.append(start)
 
     response.say("You are now connected to the assistant.")
     response.pause(length=30)  # Keep the call open
     return Response(content=str(response), media_type="application/xml")
+
+@app.post("/stream_callback")
+def callback_streaming(data: Dict):
+    print(data)
+    return {"received": data}
 
 @app.websocket("/audio-stream")
 async def audio_stream(websocket: WebSocket):
