@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi import WebSocket
 from google import genai
 from google.genai import types
+from pydub import AudioSegment
 import base64
 import numpy as np
 import os
@@ -32,9 +33,6 @@ async def voice():
     )
     
     response.append(start)
-
-    response.say("You are now connected to the assistant.")
-    response.pause(length=30)  # Keep the call open
     return Response(content=str(response), media_type="application/xml")
 
 @app.post("/stream_callback")
@@ -53,10 +51,28 @@ async def audio_stream(websocket: WebSocket):
             data = await websocket.receive_json()
             if data.get("event") == "media":
                 payload = data["media"]["payload"]
-                audio_bytes = base64.b64decode(payload)
-                if audio_bytes:
+                audio_mulaw_bytes = base64.b64decode(payload)
+
+                # 1. Create an AudioSegment from the raw mulaw data
+                audio_segment = AudioSegment(
+                    data=audio_mulaw_bytes,
+                    sample_width=1,  # mulaw is 8-bit, so 1 byte
+                    frame_rate=8000,
+                    channels=1
+                )
+
+                # 2. Resample to 16kHz for the AI model
+                resampled_segment = audio_segment.set_frame_rate(16000)
+
+                # 3. Get the raw PCM bytes
+                audio_pcm_bytes = resampled_segment.raw_data
+                if audio_pcm_bytes:
                     print("Received audio data")
-                    audio_blob = types.Blob(data=audio_bytes, mime_type="audio/pcm;rate=16000")
+                    
+                    audio_blob = types.Blob(
+                        data=audio_pcm_bytes, 
+                        mime_type="audio/pcm;rate=16000"
+                    )
                     response = await get_genai_response(audio_blob)
                     resp.say(response)
 
